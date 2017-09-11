@@ -1,2 +1,9 @@
+.deps
 *~
 *.o
+Makefile
+config.h
+config.log
+config.status
+naive_bayes
+stamp-h1

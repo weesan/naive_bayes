@@ -42,6 +42,7 @@ int main (int argc, char *argv[])
     NaiveBayes nb;
     nb.train(train_file);
     nb.dump();
+    cout << "P(Yes|Sunny) = " << nb.probability("Yes", "Sunny") << endl;
 
     return 0;
 }

@@ -20,24 +20,34 @@ void NaiveBayes::train (const char *train_file)
         const string &label = words[0];
         for (int i = 1; i < words.size(); i++) {
             const string &word = words[i];
-            _bagOfWords[label][word]++;
+            _labels[label][word]++;
+            _events[word][label]++;
         }
     }
 
     // Post process the total.
-    _bagOfWords.countTotalLabels();
-
-    printf("Total labels: %d, total unique labels: %d\n",
-           _bagOfWords.totalLabels(), _bagOfWords.totalUniqueLabels());
+    _labels.computeTotal();
+    _events.computeTotal();
 }
 
 /*
  *          P(x|c) * P(c)
  * P(c|x) = -------------
  *              P(x)
+ *
+ *
+ * Eg.
+ *                P(Sunny|Yes) * P(Yes)
+ * P(Yes|Sunny) = ---------------------
+ *                      P(Sunny)
+ *
+ * Where Yes and No are the labels, the rest are terms.
  */
-float NaiveBayes::probability(const string &c, const string &x)
+float NaiveBayes::probability (const string &c, const string &x)
 {
-    float pc = (float)_bagOfWords[c].size() / _bagOfWords.totalLabels();
-    //float px = (float)_bagOfWords[
+    double pxc = (double)_labels[c][x]         / _labels[c]["_total"];
+    double pc  = (double)_labels[c]["_total"]  / _labels.total();
+    double px  = (double)_events[x]["_total"]  / _events.total();
+    
+    return pxc * pc / px;
 }
