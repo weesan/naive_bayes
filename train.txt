@@ -1,0 +1,14 @@
+no  sunny
+yes overcast
+yes rainy
+yes sunny
+yes sunny
+yes overcast
+no  rainy
+no  rainy
+yes sunny
+yes rainy
+no  sunny
+yes overcast
+yes overcast
+no  rainy
