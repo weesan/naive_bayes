@@ -1,9 +1,11 @@
 .deps
 *~
 *.o
+autom4te.cache/
 Makefile
 config.h
 config.log
 config.status
+core
 naive_bayes
 stamp-h1

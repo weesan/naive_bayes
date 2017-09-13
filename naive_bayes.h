@@ -5,8 +5,10 @@
 #include <iostream>
 #include <unordered_map>
 #include <string>
+#include "json.hpp"
 
 using namespace std;
+using Json = nlohmann::json;
 
 class FreqTable : public unordered_map<string, unordered_map<string, size_t> > {
 private:
@@ -41,16 +43,23 @@ public:
 class NaiveBayes {
 private:
     FreqTable _labels, _events;
+    unordered_map<string, bool> field_table;
     
 public:
+    NaiveBayes(const char *field_file);
     void train(const char *train_file);
+    void test(const char *test_file);
     float probability(const string &c, const string &x);
+    float probability(const string &c, const Json &json);
     void dump(void) {
-        cout << "=> Labels:" << endl;
+        cout << "=> Labels (" << _labels.size() << "):" << endl;
         _labels.dump();
-        cout << "=> Events:" << endl;
+        cout << "=> Events (" << _events.size() << "):" << endl;
         _events.dump();
     }
+
+private:
+    void filterFields(Json &json);
 };
 
 #endif // NAIVE_BAYES_H
