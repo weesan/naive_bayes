@@ -86,7 +86,7 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-bin_PROGRAMS = naive_bayes$(EXEEXT)
+bin_PROGRAMS = naive_bayes$(EXEEXT) shuffle$(EXEEXT)
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -102,9 +102,13 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_naive_bayes_OBJECTS = main.$(OBJEXT) naive_bayes.$(OBJEXT)
+am_naive_bayes_OBJECTS = naive_bayes.$(OBJEXT) main.$(OBJEXT) \
+	test.$(OBJEXT)
 naive_bayes_OBJECTS = $(am_naive_bayes_OBJECTS)
 naive_bayes_LDADD = $(LDADD)
+am_shuffle_OBJECTS = shuffle.$(OBJEXT)
+shuffle_OBJECTS = $(am_shuffle_OBJECTS)
+shuffle_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -146,8 +150,8 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(naive_bayes_SOURCES)
-DIST_SOURCES = $(naive_bayes_SOURCES)
+SOURCES = $(naive_bayes_SOURCES) $(shuffle_SOURCES)
+DIST_SOURCES = $(naive_bayes_SOURCES) $(shuffle_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -286,7 +290,16 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-naive_bayes_SOURCES = main.cc naive_bayes.cc naive_bayes.h json.hpp
+naive_bayes_SOURCES = \
+	json.hpp             \
+	naive_bayes.cc       \
+	naive_bayes.h        \
+	main.cc              \
+	test.cc              \
+	test.h               \
+        top_queue.h
+
+shuffle_SOURCES = shuffle.cc
 AM_CXXFLAGS = -std=c++11
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
@@ -388,6 +401,10 @@ naive_bayes$(EXEEXT): $(naive_bayes_OBJECTS) $(naive_bayes_DEPENDENCIES) $(EXTRA
 	@rm -f naive_bayes$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(naive_bayes_OBJECTS) $(naive_bayes_LDADD) $(LIBS)
 
+shuffle$(EXEEXT): $(shuffle_OBJECTS) $(shuffle_DEPENDENCIES) $(EXTRA_shuffle_DEPENDENCIES) 
+	@rm -f shuffle$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(shuffle_OBJECTS) $(shuffle_LDADD) $(LIBS)
+
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 
@@ -396,6 +413,8 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/naive_bayes.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/shuffle.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test.Po@am__quote@
 
 .cc.o:
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
