@@ -1,15 +1,19 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <math.h>
-//#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string.hpp>
 #include "naive_bayes.h"
 
 using namespace std;
 
-NaiveBayes::NaiveBayes (const char *field_file, int parallel) :
-    _parallel(parallel)
+NaiveBayes::NaiveBayes (const char *field_file,
+                        int parallel,
+                        InputFormat input_format) :
+    _parallel(parallel),
+    _input_format(input_format)
 {
     if (!field_file) {
         return;
@@ -33,45 +37,64 @@ void NaiveBayes::train (const char *train_file, const char *label_field)
     ifstream ifs(train_file);
 
     while (getline(ifs, line)) {
-        Json json;
+        //cout << line << endl;
         string label;
-        
-        if (label_field) {
-            json = Json::parse(line)["_source"].flatten();
-            label = json[string("/") + label_field];
-        } else {
-            size_t space = line.find(" ");
-            label = line.substr(0, space);
-            //json = Json::parse(line.substr(++space));
-            json = Json::parse(line.substr(++space))["_source"].flatten();
-        }
-
         vector<string> fields;
-        extractFields(json, fields);
+        
+        switch (_input_format) {
+        case JSON: {
+            Json json = Json::parse(line);
+            //cout << json.dump(4) << endl;
+            label = json[label_field];
+            extractFields(json, fields);
+            break;
+        }
+        case CSV: {
+            vector<string> tokens;
+            boost::split(tokens, line, boost::is_any_of(","));
+            label = tokens[atoi(label_field)];
+            extractFields(tokens, fields);
+            break;
+        }
+        }
         
         for (auto itr = fields.begin(); itr != fields.end(); ++itr) {
             //cout << itr.key() << ": " << itr.value() << endl;
             //cout << *itr << endl;
             _labels[label][*itr]++;
-            _events[*itr][label]++;
+            //_events[*itr][label]++;
         }
     }
 
     // Post process the total.
     _labels.computeTotal();
     _events.computeTotal();
+
+    //_labels.dump();
 }
 
 void NaiveBayes::classify (const string &unknown, const string &label_field,
                            string &true_label, TopQueue &top_queue)
 {
-    Json json;
-        
-    json = Json::parse(unknown)["_source"].flatten();
-    true_label = json[string("/") + label_field];
-        
     vector<string> fields;
-    extractFields(json, fields);
+        
+    //json = Json::parse(unknown)["_source"].flatten();
+    //true_label = json[string("/") + label_field];
+    switch (_input_format) {
+    case JSON: {
+        Json json = Json::parse(unknown);
+        true_label = json[label_field];
+        extractFields(json, fields);
+        break;
+    }
+    case CSV: {
+        vector<string> tokens;
+        boost::split(tokens, unknown, boost::is_any_of(","));
+        true_label = tokens[atoi(label_field.c_str())];
+        extractFields(tokens, fields);
+        break;
+    }
+    }
 
     // Compute the scores against each label.
     for (auto itr = _labels.begin(); itr != _labels.end(); ++itr) {
@@ -166,8 +189,24 @@ void NaiveBayes::extractFields (Json &json, vector<string> &fields)
         } else if (field.is_number()) {
             str_field = to_string(field.get<int>());
         }
-        fields.push_back(str_field);
+
+        // Split the string into words.
+        vector<string> tokens;
+        boost::split(tokens, str_field, boost::is_any_of(" ,"));
+        copy(tokens.begin(), tokens.end(), back_inserter(fields));
     }
 
     //cout << json.dump(4) << endl;
+}
+
+void NaiveBayes::extractFields (const vector<string> &tokens,
+                                vector<string> &fields)
+{
+    if (field_table.size() == 0) {
+        return;
+    }
+
+    for (auto itr = field_table.begin(); itr != field_table.end(); ++itr) {
+        fields.push_back(tokens[atoi(itr->first.c_str())]);
+    }
 }

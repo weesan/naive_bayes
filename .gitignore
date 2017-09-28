@@ -8,4 +8,5 @@ config.log
 config.status
 core
 naive_bayes
+shuffle
 stamp-h1

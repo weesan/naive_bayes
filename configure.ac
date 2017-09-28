@@ -14,6 +14,7 @@ AC_PROG_CC
 # Checks for libraries.
 AC_CHECK_LIB(pthread, main)
 AC_CHECK_LIB(glog, main)
+AC_CHECK_LIB(boost_system, main)
 
 # Checks for header files.
 AC_CHECK_HEADERS([stdlib.h])

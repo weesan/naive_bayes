@@ -44,13 +44,21 @@ public:
 };
     
 class NaiveBayes {
+public:
+    enum InputFormat {
+        UNKNOWN,
+        JSON,
+        CSV
+    };
+    
 private:
     FreqTable _labels, _events;
     unordered_map<string, bool> field_table;
     int _parallel;
+    InputFormat _input_format;
     
 public:
-    NaiveBayes(const char *field_file, int parallel);
+    NaiveBayes(const char *field_file, int parallel, InputFormat input_format);
     const FreqTable &labels (void) const {
         return _labels;
     }
@@ -69,6 +77,7 @@ public:
         _events.dump();
     }
     void extractFields(Json &json, vector<string> &fields);
+    void extractFields(const vector<string> &tokens, vector<string> &fields);
 };
 
 #endif // NAIVE_BAYES_H

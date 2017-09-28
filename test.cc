@@ -8,7 +8,7 @@
 #include "json.hpp"
 #include "top_queue.h"
 
-#define SINGLE_THREADED
+//#define SINGLE_THREADED
 
 using namespace std;
 using Json = nlohmann::json;
@@ -90,6 +90,6 @@ void Test::run (void)
     // Give a summary of the results.
     LOG(INFO) << endl
               << "Accuracy: " << _correct << " / " << _total << " = "
-              << setprecision(3) << (float)_correct / _total * 100 << "%"
+              << setprecision(4) << (float)_correct / _total * 100 << "%"
               << endl;
 }
