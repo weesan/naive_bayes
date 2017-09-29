@@ -7,6 +7,7 @@
 #include "naive_bayes.h"
 
 //#define SINGLE_THREADED
+#define TRAIN_MAX_QUEUE_SIZE    1000
 
 using namespace std;
 
@@ -72,9 +73,12 @@ Train::Train (NaiveBayes &naive_bayes,
     ifstream ifs(train_file);
 
     while (getline(ifs, line)) {
-        //cout << line << endl;
         total++;
 
+        while (queueSize() >= TRAIN_MAX_QUEUE_SIZE) {
+            sleep(0.5);
+        }
+        
 #ifdef SINGLE_THREADED
         train_helper(*this, line, label_field);
 #else        
