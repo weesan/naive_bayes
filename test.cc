@@ -1,6 +1,5 @@
 #include <iostream>
 #include <fstream>
-#include <vector>
 #include <string>
 #include <glog/logging.h>
 #include "test.h"
@@ -13,20 +12,19 @@
 using namespace std;
 using Json = nlohmann::json;
 
-static void classify (NaiveBayes &naive_bayes,
-                      Test &test,
-                      const string &unknown,
-                      const string &label_field,
-                      int best_matched)
+static void classify_helper (Test &test,
+                             const string &unknown,
+                             const string &label_field,
+                             int best_matched)
 {
     TopQueue top_queue(best_matched);
     string true_label = "";
   
-    naive_bayes.classify(unknown, label_field, true_label, top_queue);
+    test.naive_bayes().classify(unknown, label_field, true_label, top_queue);
         
     bool matched = top_queue.matched(true_label);
     const Prediction &prediction = top_queue.topMatched();
-        
+
     stringstream ss;
     ss << left
        << setw(16) << true_label
@@ -44,40 +42,43 @@ static void classify (NaiveBayes &naive_bayes,
 class ClassifyTask : public Task {
 private:
     Test &_test;
-    NaiveBayes &_naive_bayes;
     const string _unknown;
     const string _label_field;
     int _best_matched;
     
 public:
-    ClassifyTask(NaiveBayes &naive_bayes, Test &test,
+    ClassifyTask(Test &test,
                  const string &unknown, const string &label_field,
                  int best_matched = 1) :
         _test(test),
-        _naive_bayes(naive_bayes),
         _unknown(unknown),
         _label_field(label_field),
         _best_matched(best_matched) {
     }
     void run(void) {
         //cout << _unknown << endl;
-        classify(_naive_bayes, _test, _unknown, _label_field, _best_matched);
+        classify_helper(_test, _unknown, _label_field, _best_matched);
     }
 };
 
-void Test::run (void)
-{
+Test::Test (NaiveBayes &naive_bayes,
+            const string &test_file,
+            const string &label_field,
+            int parallel, int best_matched) :
+    ThreadPool(parallel),
+    _naive_bayes(naive_bayes),
+    _correct(0) {
+    int total = 0;
     string unknown;
-    ifstream ifs(_test_file);
+    ifstream ifs(test_file);
 
     while (getline(ifs, unknown)) {
-        _total++;
+        total++;
         
 #ifdef SINGLE_THREADED
-        classify(_naive_bayes, *this, unknown, _label_field, _best_matched);
+        classify_helper(*this, unknown, label_field, best_matched);
 #else        
-        addTask(new ClassifyTask(_naive_bayes, *this,
-                                 unknown, _label_field, _best_matched));
+        addTask(new ClassifyTask(*this, unknown, label_field, best_matched));
 #endif        
     }
 
@@ -89,7 +90,7 @@ void Test::run (void)
 
     // Give a summary of the results.
     LOG(INFO) << endl
-              << "Accuracy: " << _correct << " / " << _total << " = "
-              << setprecision(4) << (float)_correct / _total * 100 << "%"
+              << "Accuracy: " << _correct << " / " << total << " = "
+              << setprecision(4) << (float)_correct / total * 100 << "%"
               << endl;
 }

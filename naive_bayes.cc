@@ -6,12 +6,16 @@
 #include <math.h>
 #include <boost/algorithm/string.hpp>
 #include "naive_bayes.h"
+#include "test.h"
+#include "train.h"
 
 using namespace std;
 
 NaiveBayes::NaiveBayes (const char *field_file,
+                        const char *label_field,
                         int parallel,
                         InputFormat input_format) :
+    _label_field(label_field),
     _parallel(parallel),
     _input_format(input_format)
 {
@@ -31,46 +35,14 @@ NaiveBayes::NaiveBayes (const char *field_file,
     }
 }
 
-void NaiveBayes::train (const char *train_file, const char *label_field)
+void NaiveBayes::train (const char *train_file)
 {
-    string line;
-    ifstream ifs(train_file);
+    Train(*this, train_file, _label_field, _parallel);
+}
 
-    while (getline(ifs, line)) {
-        //cout << line << endl;
-        string label;
-        vector<string> fields;
-        
-        switch (_input_format) {
-        case JSON: {
-            Json json = Json::parse(line);
-            //cout << json.dump(4) << endl;
-            label = json[label_field];
-            extractFields(json, fields);
-            break;
-        }
-        case CSV: {
-            vector<string> tokens;
-            boost::split(tokens, line, boost::is_any_of(","));
-            label = tokens[atoi(label_field)];
-            extractFields(tokens, fields);
-            break;
-        }
-        }
-        
-        for (auto itr = fields.begin(); itr != fields.end(); ++itr) {
-            //cout << itr.key() << ": " << itr.value() << endl;
-            //cout << *itr << endl;
-            _labels[label][*itr]++;
-            //_events[*itr][label]++;
-        }
-    }
-
-    // Post process the total.
-    _labels.computeTotal();
-    _events.computeTotal();
-
-    //_labels.dump();
+void NaiveBayes::test (const char *test_file, int best_matched)
+{
+    Test(*this, test_file, _label_field, _parallel, best_matched);
 }
 
 void NaiveBayes::classify (const string &unknown, const string &label_field,
@@ -82,16 +54,16 @@ void NaiveBayes::classify (const string &unknown, const string &label_field,
     //true_label = json[string("/") + label_field];
     switch (_input_format) {
     case JSON: {
-        Json json = Json::parse(unknown);
+        Json json = Json::parse(unknown).flatten();
         true_label = json[label_field];
-        extractFields(json, fields);
+        extract_fields(json, fields);
         break;
     }
     case CSV: {
         vector<string> tokens;
         boost::split(tokens, unknown, boost::is_any_of(","));
         true_label = tokens[atoi(label_field.c_str())];
-        extractFields(tokens, fields);
+        extract_fields(tokens, fields);
         break;
     }
     }
@@ -104,13 +76,6 @@ void NaiveBayes::classify (const string &unknown, const string &label_field,
         //cout << label << ": " << prob << endl;
         top_queue.push(Prediction(label, prob));
     }
-}
-
-void NaiveBayes::test (const char *test_file, const char *label_field,
-                       int best_matched)
-{
-    Test test(*this, test_file, label_field, _parallel, best_matched);
-    test.run();
 }
 
 /*
@@ -175,7 +140,7 @@ float NaiveBayes::log_probability (const string &c, const vector<string> &fields
     return pxi;
 }
 
-void NaiveBayes::extractFields (Json &json, vector<string> &fields)
+void NaiveBayes::extract_fields (Json &json, vector<string> &fields)
 {
     if (field_table.size() == 0) {
         return;
@@ -199,7 +164,7 @@ void NaiveBayes::extractFields (Json &json, vector<string> &fields)
     //cout << json.dump(4) << endl;
 }
 
-void NaiveBayes::extractFields (const vector<string> &tokens,
+void NaiveBayes::extract_fields (const vector<string> &tokens,
                                 vector<string> &fields)
 {
     if (field_table.size() == 0) {

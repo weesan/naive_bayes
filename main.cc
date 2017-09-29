@@ -110,9 +110,9 @@ int main (int argc, char *argv[])
     argc -= optind;
     argv += optind;
 
-    NaiveBayes nb(field_map, parallel, input_format);
-    nb.train(train_file, label_field);
-    nb.test(test_file, label_field, best_matched);
+    NaiveBayes nb(field_map, label_field, parallel, input_format);
+    nb.train(train_file);
+    nb.test(test_file, best_matched);
 
     return 0;
 }

@@ -3,46 +3,17 @@
 
 #include <stdio.h>
 #include <iostream>
-#include <unordered_map>
 #include <string>
 #include <vector>
+#include <unordered_map>
 #include "json.hpp"
-#include "test.h"
+#include "freq_table.h"
 #include "top_queue.h"
+#include "thread/src/thread.h"
 
 using namespace std;
 using Json = nlohmann::json;
 
-class FreqTable : public unordered_map<string, unordered_map<string, size_t> > {
-private:
-    size_t _total;
-public:
-    FreqTable(void) : _total(0) {
-    }
-    size_t const total(void) const {
-        return _total;
-    }
-    void computeTotal(void) {
-        for (auto i = begin(); i != end(); ++i) {
-            size_t total = 0;
-            for (auto j = i->second.begin(); j != i->second.end(); ++j) {
-                total += j->second;
-            }
-            (*this)[i->first]["_total"] = total;
-            _total += total;
-        }
-    }
-    void dump(void) {
-        for (auto i = begin(); i != end(); ++i) {
-            cout << i->first << ": ";
-            for (auto j = i->second.begin(); j != i->second.end(); ++j) {
-                cout << "(" << j->first << ", " << j->second << ") ";
-            }
-            cout << endl;
-        }
-    }
-};
-    
 class NaiveBayes {
 public:
     enum InputFormat {
@@ -53,18 +24,36 @@ public:
     
 private:
     FreqTable _labels, _events;
+    Mutex _labels_mutex, _events_mutex;
     unordered_map<string, bool> field_table;
+    string _label_field;
     int _parallel;
     InputFormat _input_format;
     
 public:
-    NaiveBayes(const char *field_file, int parallel, InputFormat input_format);
-    const FreqTable &labels (void) const {
-        return _labels;
+    NaiveBayes(const char *field_file,
+               const char *label_field,
+               int parallel,
+               InputFormat input_format);
+    InputFormat input_format(void) const {
+        return _input_format;
     }
-    void train(const char *train_file, const char *label_field);
-    void test(const char *test_file, const char *label_field,
-              int best_matched = 1);
+    void inc_label_count(const string &label, const string &token) {
+        _labels_mutex.lock();
+        _labels[label][token]++;
+        _labels_mutex.unlock();
+    }
+    void inc_event_count(const string &event, const string &token) {
+        _events_mutex.lock();
+        _events[event][token]++;
+        _events_mutex.unlock();
+    }
+    void post_process(void) {
+        _labels.computeTotal();
+        _events.computeTotal();
+    }
+    void train(const char *train_file);
+    void test(const char *test_file, int best_matched = 1);
     void classify(const string &unknown, const string &label_field,
                   string &true_label, TopQueue &top_queue);
     float probability(const string &c, const string &x);
@@ -76,8 +65,8 @@ public:
         cout << "=> Events (" << _events.size() << "):" << endl;
         _events.dump();
     }
-    void extractFields(Json &json, vector<string> &fields);
-    void extractFields(const vector<string> &tokens, vector<string> &fields);
+    void extract_fields(Json &json, vector<string> &fields);
+    void extract_fields(const vector<string> &tokens, vector<string> &fields);
 };
 
 #endif // NAIVE_BAYES_H
