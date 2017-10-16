@@ -11,38 +11,14 @@
 
 using namespace std;
 
-NaiveBayes::NaiveBayes (const char *field_file,
-                        const char *label_field,
-                        int parallel,
-                        InputFormat input_format) :
-    _label_field(label_field),
-    _parallel(parallel),
-    _input_format(input_format)
-{
-    if (!field_file) {
-        return;
-    }
-
-    // Construct the field table from the field file.
-    string line;
-    ifstream ifs(field_file);
-    
-    while (getline(ifs, line)) {
-        if (line[0] == '#' || line[0] == ';') {
-            continue;
-        }
-        field_table[line] = true;
-    }
-}
-
 void NaiveBayes::train (const char *train_file)
 {
-    Train(*this, train_file, _label_field, _parallel);
+    Train(*this, train_file);
 }
 
-void NaiveBayes::test (const char *test_file, int best_matched)
+void NaiveBayes::test (const char *test_file, float confidence, int best_matched)
 {
-    Test(*this, test_file, _label_field, _parallel, best_matched);
+    Test(*this, test_file, confidence, best_matched);
 }
 
 void NaiveBayes::classify (const string &unknown, const string &label_field,
@@ -128,8 +104,7 @@ float NaiveBayes::log_probability (const string &c, const vector<string> &fields
     double pc  = c_total - log(_labels.total());
     double pxi = 0;
     for (auto itr = fields.begin(); itr != fields.end(); ++itr) {
-        if (_labels.find(c) != _labels.end() &&
-            _labels[c].find(*itr) != _labels[c].end()) {
+        if (_labels[c].find(*itr) != _labels[c].end()) {
             pxi += log(_labels[c][*itr]) - c_total;
         } else {
             pxi = log(1E-99);
@@ -142,11 +117,11 @@ float NaiveBayes::log_probability (const string &c, const vector<string> &fields
 
 void NaiveBayes::extract_fields (Json &json, vector<string> &fields)
 {
-    if (field_table.size() == 0) {
+    if (_field_table.size() == 0) {
         return;
     }
 
-    for (auto itr = field_table.begin(); itr != field_table.end(); ++itr) {
+    for (auto itr = _field_table.begin(); itr != _field_table.end(); ++itr) {
         auto field = json[itr->first];
         string str_field;
         if (field.is_string()) {
@@ -167,11 +142,18 @@ void NaiveBayes::extract_fields (Json &json, vector<string> &fields)
 void NaiveBayes::extract_fields (const vector<string> &tokens,
                                 vector<string> &fields)
 {
-    if (field_table.size() == 0) {
+    if (_field_table.size() == 0) {
         return;
     }
 
-    for (auto itr = field_table.begin(); itr != field_table.end(); ++itr) {
+    for (auto itr = _field_table.begin(); itr != _field_table.end(); ++itr) {
         fields.push_back(tokens[atoi(itr->first.c_str())]);
     }
+}
+
+void NaiveBayes::dump(void) {
+    cout << "=> Labels (" << _labels.size() << "):" << endl;
+    _labels.dump();
+    cout << "=> Events (" << _events.size() << "):" << endl;
+    _events.dump();
 }

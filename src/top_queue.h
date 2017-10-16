@@ -56,6 +56,9 @@ private:
 public:
     TopQueue(int n = 1) : _n(n){
     }
+    const Predictions &predictions(void) const {
+        return _predictions;
+    }
     void push(const Prediction &prediction) {
         priority_queue<Prediction, Predictions>::push(prediction);
         if (size() > _n) {
@@ -75,7 +78,12 @@ public:
     }
     const Prediction &topMatched(void) {
         convertQueue2Vector();
-        return _predictions[0];
+        if (_predictions.size()) {
+            return _predictions[0];
+        } else {
+            static Prediction nullPrediction("", 0.0);
+            return nullPrediction;
+        }
     }
     void dump(void) {
         while (!empty()) {

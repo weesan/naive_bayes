@@ -1,26 +1,16 @@
-k-means in C++
-==============
+Naive Bayes Classifer
+=====================
 
 ## Introduction
 
-This project implements k-means algorithm in C++.  It also comes with
-a demo program using FLTK for animation.
-
-## Dependencies
-
-- [fltk-1.3.3](http://www.fltk.org/)
+This project implements Naive Bayes Classifer in C++.  It utilizes the
+Thread Pool (http://github.com/weesan/thread/) for multi-processing
+during training and testing.
 
 ## Installation
 
     $ configure
     $ make
-
-## Demo
-
-    $ k-means 100000 5
-
-![picture](https://github.com/weesan/k-means/blob/master/k-means.png)
-
 
 Comments, questions and pull requests are equally welcome.
 

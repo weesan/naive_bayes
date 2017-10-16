@@ -8,22 +8,24 @@
 #include "top_queue.h"
 
 //#define SINGLE_THREADED
+#define TEST_MAX_QUEUE_SIZE    1000
 
 using namespace std;
 using Json = nlohmann::json;
 
-static void classify_helper (Test &test,
-                             const string &unknown,
-                             const string &label_field,
-                             int best_matched)
+static void classify_helper (Test &test, const string &unknown,
+                             float confidence, int best_matched)
 {
     TopQueue top_queue(best_matched);
     string true_label = "";
+    NaiveBayes &naive_bayes = test.naive_bayes();
+    const string &label_field = naive_bayes.label_field();
   
-    test.naive_bayes().classify(unknown, label_field, true_label, top_queue);
+    naive_bayes.classify(unknown, label_field, true_label, top_queue);
         
     bool matched = top_queue.matched(true_label);
     const Prediction &prediction = top_queue.topMatched();
+    bool low_confidence = prediction.score() < confidence;
 
     stringstream ss;
     ss << left
@@ -31,54 +33,58 @@ static void classify_helper (Test &test,
        << setw(16) << prediction.label()
        << setw(10) << (matched ? "Correct" : "Wrong   ")
        << prediction.score()
+       << (low_confidence ? " (low)" : "")
        << endl;
     LOG(INFO) << ss.str();
-    
-    if (matched) {
-        test.incCorrect();
+
+    if (low_confidence) {
+        test.inc_low_confidence();
+    } else if (matched) {
+        test.inc_correct();
     }
 }
 
 class ClassifyTask : public Task {
 private:
     Test &_test;
-    const string _unknown;
-    const string _label_field;
+    string _unknown;
+    float _confidence;
     int _best_matched;
     
 public:
-    ClassifyTask(Test &test,
-                 const string &unknown, const string &label_field,
-                 int best_matched = 1) :
+    ClassifyTask(Test &test, const string &unknown,
+                 float confidence, int best_matched = 1) :
         _test(test),
         _unknown(unknown),
-        _label_field(label_field),
+        _confidence(confidence),
         _best_matched(best_matched) {
     }
     void run(void) {
         //cout << _unknown << endl;
-        classify_helper(_test, _unknown, _label_field, _best_matched);
+        classify_helper(_test, _unknown, _confidence, _best_matched);
     }
 };
 
-Test::Test (NaiveBayes &naive_bayes,
-            const string &test_file,
-            const string &label_field,
-            int parallel, int best_matched) :
-    ThreadPool(parallel),
+Test::Test (NaiveBayes &naive_bayes, const string &test_file,
+            float confidence, int best_matched) :
+    ThreadPool(naive_bayes.parallel()),
     _naive_bayes(naive_bayes),
     _correct(0) {
-    int total = 0;
+    unsigned int total = 0;
     string unknown;
     ifstream ifs(test_file);
 
     while (getline(ifs, unknown)) {
         total++;
+
+        while (queueSize() >= TEST_MAX_QUEUE_SIZE) {
+            sleep(0.5);
+        }
         
 #ifdef SINGLE_THREADED
-        classify_helper(*this, unknown, label_field, best_matched);
+        classify_helper(*this, unknown, confidence, best_matched);
 #else        
-        addTask(new ClassifyTask(*this, unknown, label_field, best_matched));
+        addTask(new ClassifyTask(*this, unknown, confidence, best_matched));
 #endif        
     }
 
@@ -89,8 +95,12 @@ Test::Test (NaiveBayes &naive_bayes,
     wait();
 
     // Give a summary of the results.
-    LOG(INFO) << endl
-              << "Accuracy: " << _correct << " / " << total << " = "
-              << setprecision(4) << (float)_correct / total * 100 << "%"
-              << endl;
+    unsigned int new_total = total - _low_confidence;
+    LOG(INFO)
+        << endl
+        << "Low Confidence: " << _low_confidence << " / " << total << " = "
+        << setprecision(4) << (float)_low_confidence / total * 100 << "%" << endl
+        << "Accuracy: " << _correct << " / " << new_total << " = "
+        << setprecision(4) << (float)_correct / new_total * 100 << "%"
+        << endl;
 }

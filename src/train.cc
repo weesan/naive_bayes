@@ -11,14 +11,13 @@
 
 using namespace std;
 
-static void train_helper (Train &train,
-                          const string &line,
-                          const string &label_field)
+static void train_helper (Train &train, const string &line)
 {
     //cout << line << endl;
     string label;
     vector<string> fields;
     NaiveBayes &naive_bayes = train.naive_bayes();
+    const string &label_field = naive_bayes.label_field();
 
     switch (naive_bayes.input_format()) {
     case NaiveBayes::JSON: {
@@ -38,7 +37,6 @@ static void train_helper (Train &train,
     }
         
     for (auto itr = fields.begin(); itr != fields.end(); ++itr) {
-        //cout << itr.key() << ": " << itr.value() << endl;
         //cout << *itr << endl;
         naive_bayes.inc_label_count(label, *itr);
         //naive_bayes.inc_event_count(*itr, label);
@@ -49,25 +47,20 @@ class TrainTask : public Task {
 private:
     Train &_train;
     string _line;
-    string _label_field;
 
 public:
-    TrainTask(Train &train, const string &line, const string &label_field) :
+    TrainTask(Train &train, const string &line) :
         _train(train),
-        _line(line),
-        _label_field(label_field) {
+        _line(line) {
     }
     void run(void) {
-        train_helper(_train, _line, _label_field);
+        train_helper(_train, _line);
     }
 };
 
-Train::Train (NaiveBayes &naive_bayes,
-              const string &train_file,
-              const string &label_field,
-              int parallel) :
-    ThreadPool(parallel),
-    _naive_bayes(naive_bayes) {
+Train::Train (NaiveBayes &naive_bayes, const string &train_file) :
+    ThreadPool(naive_bayes.parallel()),
+    _naive_bayes(naive_bayes) {    
     int total = 0;
     string line;
     ifstream ifs(train_file);
@@ -80,9 +73,9 @@ Train::Train (NaiveBayes &naive_bayes,
         }
         
 #ifdef SINGLE_THREADED
-        train_helper(*this, line, label_field);
+        train_helper(*this, line);
 #else        
-        addTask(new TrainTask(*this, line, label_field));
+        addTask(new TrainTask(*this, line));
 #endif        
     }
 
@@ -95,4 +88,3 @@ Train::Train (NaiveBayes &naive_bayes,
     // Post process the total.
     _naive_bayes.post_process();
 }
-

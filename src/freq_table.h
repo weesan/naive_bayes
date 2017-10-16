@@ -1,14 +1,17 @@
 #ifndef FREQ_TABLE_H
 #define FREQ_TABLE_H
 
+#include <map>
 #include <unordered_map>
 #include <string>
 
 using namespace std;
 
-class FreqTable : public unordered_map<string, unordered_map<string, size_t> > {
+//class FreqTable : public unordered_map<string, unordered_map<string, size_t> > {
+class FreqTable : public map<string, unordered_map<string, size_t> > {
 private:
     size_t _total;
+    
 public:
     FreqTable(void) : _total(0) {
     }
@@ -27,9 +30,9 @@ public:
     }
     void dump(void) {
         for (auto i = begin(); i != end(); ++i) {
-            cout << i->first << ": ";
+            cout << i->first << ": " << endl;
             for (auto j = i->second.begin(); j != i->second.end(); ++j) {
-                cout << "(" << j->first << ", " << j->second << ") ";
+                cout << "(" << j->first << ", " << j->second << ") " << endl;
             }
             cout << endl;
         }

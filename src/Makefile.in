@@ -99,8 +99,8 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_naive_bayes_OBJECTS = naive_bayes.$(OBJEXT) main.$(OBJEXT) \
-	test.$(OBJEXT) train.$(OBJEXT)
+am_naive_bayes_OBJECTS = field_table.$(OBJEXT) naive_bayes.$(OBJEXT) \
+	main.$(OBJEXT) test.$(OBJEXT) train.$(OBJEXT)
 naive_bayes_OBJECTS = $(am_naive_bayes_OBJECTS)
 naive_bayes_LDADD = $(LDADD)
 am_shuffle_OBJECTS = shuffle.$(OBJEXT)
@@ -267,6 +267,8 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 naive_bayes_SOURCES = \
+	field_table.cc       \
+	field_table.h        \
 	freq_table.h         \
 	json.hpp             \
 	naive_bayes.cc       \
@@ -370,6 +372,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/field_table.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/naive_bayes.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/shuffle.Po@am__quote@

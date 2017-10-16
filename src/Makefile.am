@@ -1,5 +1,7 @@
 bin_PROGRAMS = naive_bayes shuffle
 naive_bayes_SOURCES =        \
+	field_table.cc       \
+	field_table.h        \
 	freq_table.h         \
 	json.hpp             \
 	naive_bayes.cc       \

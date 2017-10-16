@@ -16,13 +16,14 @@ using namespace std;
 
 static void usage (const char *program)
 {
-    cerr << "Usage: " << program << " [-bcfhjlPtT]" << endl
+    cerr << "Usage: " << program << " [-bcCfhJlPtT]" << endl
          << endl
          << "\t-b\tBest/Top matched." << endl
-         << "\t-c\tCSV format." << endl
+         << "\t-c\tConfidence threshold." << endl
+         << "\t-C\tCSV format." << endl
          << "\t-f\tField map." << endl
          << "\t-h\tHelp." << endl
-         << "\t-j\tJSON format." << endl
+         << "\t-J\tJSON format." << endl
          << "\t-l\tLabel field." << endl
          << "\t-P\tParallel processing." << endl
          << "\t-t\tTraining file." << endl
@@ -43,23 +44,27 @@ int main (int argc, char *argv[])
     bool csv_format = false;
     bool json_format = false;
     NaiveBayes::InputFormat input_format = NaiveBayes::UNKNOWN;
+    float confidence = log(1E-99);
 
     FLAGS_log_prefix = 0;
     FLAGS_logtostderr = 1;
     google::InitGoogleLogging(program);
     
-    while ((opt = getopt(argc, argv, "b:cf:hjl:P:t:T:")) != EOF) {
+    while ((opt = getopt(argc, argv, "b:c:Cf:hJl:P:t:T:")) != EOF) {
         switch (opt) {
         case 'b':
             best_matched = atoi(optarg);
             break;
         case 'c':
+            confidence = atof(optarg);
+            break;
+        case 'C':
             csv_format = true;
             break;
         case 'f':
             field_map = optarg;
             break;
-        case 'j':
+        case 'J':
             json_format = true;
             break;
         case 'l':
@@ -82,13 +87,12 @@ int main (int argc, char *argv[])
     }
 
     if (!train_file) {
-        cerr << "Missing the -t option!" << endl;
+        cerr << "Warning: missing the -t option!" << endl;
         return -1;
     }
     
     if (!test_file) {
-        cerr << "Missing the -T option!" << endl;
-        return -1;
+        cerr << "Warning: missing the -T option!" << endl;
     }
     
     if (!label_field) {
@@ -111,8 +115,12 @@ int main (int argc, char *argv[])
     argv += optind;
 
     NaiveBayes nb(field_map, label_field, parallel, input_format);
-    nb.train(train_file);
-    nb.test(test_file, best_matched);
+    if (train_file) {
+        nb.train(train_file);
+    }
+    if (test_file) {
+        nb.test(test_file, confidence, best_matched);
+    }
 
     return 0;
 }
