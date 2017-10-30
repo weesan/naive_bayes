@@ -1,3 +1,6 @@
 [submodule "thread"]
 	path = thread
 	url = https://github.com/weesan/thread
+[submodule "json"]
+	path = json
+	url = https://github.com/nlohmann/json.git

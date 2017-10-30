@@ -24,14 +24,14 @@ static void train_helper (Train &train, const string &line)
         Json json = Json::parse(line).flatten();
         //cout << json.dump(4) << endl;
         label = json[label_field];
-        naive_bayes.extract_fields(json, fields);
+        naive_bayes.field_table().extract(json, fields);
         break;
     }
     case NaiveBayes::CSV: {
         vector<string> tokens;
         boost::split(tokens, line, boost::is_any_of(","));
         label = tokens[atoi(label_field.c_str())];
-        naive_bayes.extract_fields(tokens, fields);
+        naive_bayes.field_table().extract(tokens, fields);
         break;
     }
     }

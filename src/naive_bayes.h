@@ -3,14 +3,12 @@
 
 #include <string>
 #include <vector>
-#include "json.hpp"
 #include "field_table.h"
 #include "freq_table.h"
 #include "top_queue.h"
 #include "thread/src/thread.h"
 
 using namespace std;
-using Json = nlohmann::json;
 
 class NaiveBayes {
 public:
@@ -34,9 +32,12 @@ public:
                int parallel,
                InputFormat input_format) :
         _field_table(field_file),
-        _label_field(label_field),
+        _label_field(string("/") + label_field),
         _parallel(parallel),
         _input_format(input_format) {
+    }
+    FieldTable &field_table(void) {
+        return _field_table;
     }
     InputFormat input_format(void) const {
         return _input_format;
@@ -69,8 +70,6 @@ public:
     float probability(const string &c, const string &x);
     float probability(const string &c, const vector<string> &fields);
     float log_probability(const string &c, const vector<string> &fields);
-    void extract_fields(Json &json, vector<string> &fields);
-    void extract_fields(const vector<string> &tokens, vector<string> &fields);
     void dump(void);
 };
 

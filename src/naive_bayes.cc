@@ -32,14 +32,14 @@ void NaiveBayes::classify (const string &unknown, const string &label_field,
     case JSON: {
         Json json = Json::parse(unknown).flatten();
         true_label = json[label_field];
-        extract_fields(json, fields);
+        _field_table.extract(json, fields);
         break;
     }
     case CSV: {
         vector<string> tokens;
         boost::split(tokens, unknown, boost::is_any_of(","));
         true_label = tokens[atoi(label_field.c_str())];
-        extract_fields(tokens, fields);
+        _field_table.extract(tokens, fields);
         break;
     }
     }
@@ -113,42 +113,6 @@ float NaiveBayes::log_probability (const string &c, const vector<string> &fields
     }
 
     return pxi;
-}
-
-void NaiveBayes::extract_fields (Json &json, vector<string> &fields)
-{
-    if (_field_table.size() == 0) {
-        return;
-    }
-
-    for (auto itr = _field_table.begin(); itr != _field_table.end(); ++itr) {
-        auto field = json[itr->first];
-        string str_field;
-        if (field.is_string()) {
-            str_field = field;
-        } else if (field.is_number()) {
-            str_field = to_string(field.get<int>());
-        }
-
-        // Split the string into words.
-        vector<string> tokens;
-        boost::split(tokens, str_field, boost::is_any_of(" ,"));
-        copy(tokens.begin(), tokens.end(), back_inserter(fields));
-    }
-
-    //cout << json.dump(4) << endl;
-}
-
-void NaiveBayes::extract_fields (const vector<string> &tokens,
-                                vector<string> &fields)
-{
-    if (_field_table.size() == 0) {
-        return;
-    }
-
-    for (auto itr = _field_table.begin(); itr != _field_table.end(); ++itr) {
-        fields.push_back(tokens[atoi(itr->first.c_str())]);
-    }
 }
 
 void NaiveBayes::dump(void) {
