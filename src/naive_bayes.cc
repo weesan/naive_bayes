@@ -26,12 +26,17 @@ void NaiveBayes::classify (const string &unknown, const string &label_field,
 {
     vector<string> fields;
         
-    //json = Json::parse(unknown)["_source"].flatten();
-    //true_label = json[string("/") + label_field];
     switch (_input_format) {
     case JSON: {
         Json json = Json::parse(unknown).flatten();
-        true_label = json[label_field];
+        try {
+            true_label = json[label_field];
+        } catch (const exception &e) {
+            // This may happen when the entry trying to be classfi has
+            // no true label.
+            //cerr << "Json error: "  << e.what() << endl;
+            true_label = "";
+        }
         _field_table.extract(json, fields);
         break;
     }

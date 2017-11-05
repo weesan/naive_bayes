@@ -4,14 +4,12 @@
 #include <glog/logging.h>
 #include "test.h"
 #include "naive_bayes.h"
-#include "json.hpp"
 #include "top_queue.h"
 
 //#define SINGLE_THREADED
 #define TEST_MAX_QUEUE_SIZE    1000
 
 using namespace std;
-using Json = nlohmann::json;
 
 static void classify_helper (Test &test, const string &unknown,
                              float confidence, int best_matched)
