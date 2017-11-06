@@ -32,10 +32,15 @@ void NaiveBayes::classify (const string &unknown, const string &label_field,
         try {
             true_label = json[label_field];
         } catch (const exception &e) {
-            // This may happen when the entry trying to be classfi has
-            // no true label.
-            //cerr << "Json error: "  << e.what() << endl;
-            true_label = "";
+            // This may happen when the entry trying to be classfy has
+            // no true label.  In which case, we try to get its "id" if
+            // available for post analysis purposes.
+            try {
+                true_label = json["/id"];
+            } catch (const exception &e) {
+                // As a last resort, let's use empty label.
+                true_label = "";
+            }
         }
         _field_table.extract(json, fields);
         break;
