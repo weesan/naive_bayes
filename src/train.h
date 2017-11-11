@@ -13,7 +13,7 @@ private:
     NaiveBayes &_naive_bayes;
 
 public:
-    Train(NaiveBayes &naive_bayes, const string &train_file);
+    Train(NaiveBayes &naive_bayes, const vector<string> &train_files);
     NaiveBayes &naive_bayes(void) const {
         return _naive_bayes;
     }

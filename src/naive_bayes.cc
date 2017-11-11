@@ -11,9 +11,9 @@
 
 using namespace std;
 
-void NaiveBayes::train (const char *train_file)
+void NaiveBayes::train (const vector<string> train_files)
 {
-    Train(*this, train_file);
+    Train(*this, train_files);
 }
 
 void NaiveBayes::test (const char *test_file, float confidence, int best_matched)

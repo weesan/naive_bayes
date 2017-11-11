@@ -63,7 +63,7 @@ public:
         _events.computeTotal();
         //_labels.dump();
     }
-    void train(const char *train_file);
+    void train(const vector<string> train_files);
     void test(const char *test_file, float confidence, int best_matched = 1);
     void classify(const string &unknown, const string &label_field,
                   string &true_label, TopQueue &top_queue);

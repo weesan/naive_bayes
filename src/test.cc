@@ -27,11 +27,11 @@ static void classify_helper (Test &test, const string &unknown,
 
     stringstream ss;
     ss << left
-       << setw(16) << true_label
-       << setw(16) << prediction.label()
-       << setw(10) << (matched ? "Correct" : "Wrong   ")
-       << prediction.score()
-       << (low_confidence ? " (low)" : "")
+       << setw(16) << true_label << " "
+       << setw(16) << prediction.label() << " "
+       << setw(9)  << (matched ? "Correct" : "Wrong  ") << " "
+       << prediction.score() << " "
+       << (low_confidence ? "(low)" : "")
        << endl;
     LOG(INFO) << ss.str();
 
@@ -67,7 +67,8 @@ Test::Test (NaiveBayes &naive_bayes, const string &test_file,
             float confidence, int best_matched) :
     ThreadPool(naive_bayes.parallel()),
     _naive_bayes(naive_bayes),
-    _correct(0) {
+    _correct(0),
+    _low_confidence(0) {
     unsigned int total = 0;
     string unknown;
     ifstream ifs(test_file);

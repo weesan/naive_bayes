@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <string>
+#include <vector>
 #include <getopt.h>
 #include <glog/logging.h>
 #include "config.h"
@@ -35,7 +36,7 @@ int main (int argc, char *argv[])
 {
     int opt;
     const char *program = argv[0];
-    const char *train_file = NULL;
+    vector<string> train_files;
     const char *test_file = NULL;
     const char *field_map = NULL;
     const char *label_field = NULL;
@@ -74,7 +75,7 @@ int main (int argc, char *argv[])
             parallel = atoi(optarg);
             break;
         case 't':
-            train_file = optarg;
+            train_files.push_back(optarg);
             break;
         case 'T':
             test_file = optarg;
@@ -86,7 +87,7 @@ int main (int argc, char *argv[])
         }
     }
 
-    if (!train_file) {
+    if (train_files.empty()) {
         cerr << "Warning: missing the -t option!" << endl;
         return -1;
     }
@@ -115,8 +116,8 @@ int main (int argc, char *argv[])
     argv += optind;
 
     NaiveBayes nb(field_map, label_field, parallel, input_format);
-    if (train_file) {
-        nb.train(train_file);
+    if (!train_files.empty()) {
+        nb.train(train_files);
     }
     if (test_file) {
         nb.test(test_file, confidence, best_matched);

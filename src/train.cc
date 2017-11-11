@@ -58,25 +58,32 @@ public:
     }
 };
 
-Train::Train (NaiveBayes &naive_bayes, const string &train_file) :
+Train::Train (NaiveBayes &naive_bayes, const vector<string> &train_files) :
     ThreadPool(naive_bayes.parallel()),
     _naive_bayes(naive_bayes) {    
     int total = 0;
-    string line;
-    ifstream ifs(train_file);
 
-    while (getline(ifs, line)) {
-        total++;
-
-        while (queueSize() >= TRAIN_MAX_QUEUE_SIZE) {
-            sleep(0.5);
+    for (int i = 0; i < train_files.size(); i++) {
+        string line;
+        ifstream ifs(train_files[i]);
+        if (!ifs) {
+            cerr << "Failed to open: " << train_files[i] << endl;
+            exit(-1);
         }
         
+        while (getline(ifs, line)) {
+            total++;
+
+            while (queueSize() >= TRAIN_MAX_QUEUE_SIZE) {
+                sleep(0.5);
+            }
+        
 #ifdef SINGLE_THREADED
-        train_helper(*this, line);
-#else        
-        addTask(new TrainTask(*this, line));
-#endif        
+            train_helper(*this, line);
+#else
+            addTask(new TrainTask(*this, line));
+#endif
+        }
     }
 
     // Signal the thread pool we are done with populating the jobs.
