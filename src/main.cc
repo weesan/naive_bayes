@@ -20,7 +20,7 @@ static void usage (const char *program)
     cerr << "Usage: " << program << " [-bcCfhJlPtT]" << endl
          << endl
          << "\t-b\tBest/Top matched." << endl
-         << "\t-c\tConfidence threshold." << endl
+         << "\t-c\tConfidence (range from 0.0 to 1.0)." << endl
          << "\t-C\tCSV format." << endl
          << "\t-f\tField map." << endl
          << "\t-h\tHelp." << endl
@@ -45,7 +45,7 @@ int main (int argc, char *argv[])
     bool csv_format = false;
     bool json_format = false;
     NaiveBayes::InputFormat input_format = NaiveBayes::UNKNOWN;
-    float confidence = log(1E-99);
+    float confidence = 0.0;
 
     FLAGS_log_prefix = 0;
     FLAGS_logtostderr = 1;

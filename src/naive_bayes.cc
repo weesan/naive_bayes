@@ -11,6 +11,8 @@
 
 using namespace std;
 
+const double NaiveBayes::CONFIDENCE = log(numeric_limits<double>::min());
+
 void NaiveBayes::train (const vector<string> train_files)
 {
     Train(*this, train_files);
@@ -100,7 +102,7 @@ float NaiveBayes::probability (const string &c, const vector<string> &fields)
             _labels[c].find(*itr) != _labels[c].end()) {
             pxi *= (double)_labels[c][*itr] / c_total;
         } else {
-            pxi = 1E-99;
+            pxi = CONFIDENCE;
             break;
         }
     }
@@ -117,8 +119,10 @@ float NaiveBayes::log_probability (const string &c, const vector<string> &fields
         if (_labels[c].find(*itr) != _labels[c].end()) {
             pxi += log(_labels[c][*itr]) - c_total;
         } else {
-            pxi = log(1E-99);
-            break;
+            //pxi = CONFIDENCE;
+            //break;
+            pxi += CONFIDENCE / _field_table.size();
+            //pxi += CONFIDENCE;
         }
     }
 

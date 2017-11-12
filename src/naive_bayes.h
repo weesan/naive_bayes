@@ -17,6 +17,9 @@ public:
         JSON,
         CSV
     };
+
+    static const double CONFIDENCE;
+    static const double LOG_CONFIDENCE;
     
 private:
     FreqTable _labels, _events;

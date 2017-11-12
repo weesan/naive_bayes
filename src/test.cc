@@ -23,7 +23,7 @@ static void classify_helper (Test &test, const string &unknown,
         
     bool matched = top_queue.matched(true_label);
     const Prediction &prediction = top_queue.topMatched();
-    bool low_confidence = prediction.score() < confidence;
+    bool low_confidence = prediction.score() <= NaiveBayes::CONFIDENCE * confidence;
 
     stringstream ss;
     ss << left
