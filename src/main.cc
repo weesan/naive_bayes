@@ -45,7 +45,7 @@ int main (int argc, char *argv[])
     bool csv_format = false;
     bool json_format = false;
     NaiveBayes::InputFormat input_format = NaiveBayes::UNKNOWN;
-    float confidence = 0.0;
+    float confidence = 1.0;
 
     FLAGS_log_prefix = 0;
     FLAGS_logtostderr = 1;
