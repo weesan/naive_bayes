@@ -2,8 +2,8 @@
 
 ## Introduction
 
-This project implements Naive Bayes Classifer in C++.  It utilizes the
-[Thread Pool](http://github.com/weesan/thread/) for multi-processing
+This project implements the Naive Bayes Classifier in C++.  It utilizes the
+[Thread Pool](https://github.com/weesan/thread/) for multi-processing
 during training and testing.
 
 ## Other Dependencies
